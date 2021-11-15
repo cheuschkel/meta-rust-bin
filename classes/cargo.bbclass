@@ -15,6 +15,9 @@ export CARGO_TARGET_DIR = "${B}"
 RUST_TARGET = "${@rust_target(d, 'TARGET')}"
 RUST_BUILD = "${@rust_target(d, 'BUILD')}"
 
+# Target does not apply to host; need this for the host_config option
+export CARGO_TARGET_APPLIES_TO_HOST = "false"
+
 # Additional flags passed directly to the "cargo build" invocation
 EXTRA_CARGO_FLAGS ??= ""
 
@@ -34,16 +37,16 @@ CARGO_BUILD_FLAGS = "\
     --target=${RUST_TARGET} \
     -Zhost-config -Ztarget-applies-to-host -Zunstable-options \
     ${CARGO_BUILD_TYPE} \
-    ${@base_conditional('CARGO_FEATURES', '', '', '--features "${CARGO_FEATURES}"', d)} \
+    ${@oe.utils.conditional('CARGO_FEATURES', '', '', '--features "${CARGO_FEATURES}"', d)} \
     ${EXTRA_CARGO_FLAGS} \
 "
 
 create_cargo_config() {
     cat >${CARGO_HOME}/config << EOF
 [host.${RUST_BUILD}]
-linker = ${WRAPPER_DIR}/linker-native-wrapper.sh
+linker = "${WRAPPER_DIR}/linker-native-wrapper.sh"
 [target.${RUST_TARGET}]
-linker = ${WRAPPER_DIR}/linker-wrapper.sh
+linker = "${WRAPPER_DIR}/linker-wrapper.sh"
 
 [build]
 rustflags = ["-C", "rpath"]
