@@ -19,30 +19,52 @@ CHANNEL_FILE="channel-rust-${TARGET_VERSION}.toml"
 TMPDIR=`mktemp -p $PWD -d`
 cd "$TMPDIR"
 
-TARGET_TRIPLES="\
-aarch64-unknown-linux-gnu
-arm-unknown-linux-gnueabi
-arm-unknown-linux-gnueabihf
-armv7-unknown-linux-gnueabihf
-i686-unknown-linux-gnu
-mips-unknown-linux-gnu
-mipsel-unknown-linux-gnu
-powerpc-unknown-linux-gnu
-x86_64-unknown-linux-gnu"
+TARGET_TRIPLES=(
+    aarch64-unknown-linux-gnu
+    aarch64-unknown-linux-musl
+    arm-unknown-linux-gnueabi
+    arm-unknown-linux-gnueabihf
+    armv5te-unknown-linux-gnueabi
+    armv5te-unknown-linux-musleabi
+    armv7-unknown-linux-gnueabihf
+    armv7-unknown-linux-musleabihf
+    i686-unknown-linux-gnu
+    mips-unknown-linux-gnu
+    mipsel-unknown-linux-gnu
+    powerpc-unknown-linux-gnu
+    x86_64-unknown-linux-gnu
+)
 
-RUSTC_TRIPLES="\
-aarch64-unknown-linux-gnu
-arm-unknown-linux-gnueabi
-arm-unknown-linux-gnueabihf
-armv7-unknown-linux-gnueabihf
-i686-unknown-linux-gnu
-x86_64-unknown-linux-gnu"
+RUSTC_TRIPLES=(
+    aarch64-unknown-linux-gnu
+    arm-unknown-linux-gnueabi
+    arm-unknown-linux-gnueabihf
+    armv7-unknown-linux-gnueabihf
+    i686-unknown-linux-gnu
+    x86_64-unknown-linux-gnu
+)
+
+is_nightly() {
+    if [ x"$TARGET_VERSION" == x"nightly" -a "$NIGHTLY_DATE" ]; then
+        true
+    else
+        false
+    fi
+}
+
+download() {
+    echo "download $@"
+    curl --fail -# -O $@
+}
 
 dlfile() {
     component="$1"
     triple="$2"
-    echo "Downloading $component for triple $triple..."
-    wget https://static.rust-lang.org/dist/${component}-${TARGET_VERSION}-${triple}.tar.gz
+    if is_nightly; then
+        download "https://static.rust-lang.org/dist/$NIGHTLY_DATE/$component-$TARGET_VERSION-$triple.tar.gz"
+    else
+        download "https://static.rust-lang.org/dist/$component-$TARGET_VERSION-$triple.tar.gz"
+    fi
 }
 
 get_md5sum() {
@@ -83,7 +105,7 @@ cargo_filename() {
 }
 
 download_files() {
-    if [ x"$TARGET_VERSION" == x"nightly" -a "$NIGHTLY_DATE" ]; then
+    if is_nightly; then
         download "https://static.rust-lang.org/dist/$NIGHTLY_DATE/$CHANNEL_FILE"
     else
         download "https://static.rust-lang.org/dist/$CHANNEL_FILE"
