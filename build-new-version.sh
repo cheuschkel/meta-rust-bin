@@ -83,7 +83,11 @@ cargo_filename() {
 }
 
 download_files() {
-    wget https://static.rust-lang.org/dist/${CHANNEL_FILE}
+    if [ x"$TARGET_VERSION" == x"nightly" -a "$NIGHTLY_DATE" ]; then
+        download "https://static.rust-lang.org/dist/$NIGHTLY_DATE/$CHANNEL_FILE"
+    else
+        download "https://static.rust-lang.org/dist/$CHANNEL_FILE"
+    fi
 
     # cargo for each supported host triple
     for triple in $RUSTC_TRIPLES; do
