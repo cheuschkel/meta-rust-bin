@@ -46,33 +46,24 @@ CARGO_BUILD_FLAGS = "\
     --verbose \
     --manifest-path ${CARGO_MANIFEST_PATH} \
     --target=${RUST_TARGET} \
+    -Zhost-config -Ztarget-applies-to-host -Zunstable-options \
     ${CARGO_BUILD_TYPE} \
     ${@oe.utils.conditional('CARGO_FEATURES', '', '', '--features "${CARGO_FEATURES}"', d)} \
     ${EXTRA_CARGO_FLAGS} \
 "
 
 create_cargo_config() {
-    if [ "${RUST_BUILD}" != "${RUST_TARGET}" ]; then
-        echo > ${CARGO_HOME}/config
-        echo "[target.${RUST_BUILD}]" >> ${CARGO_HOME}/config
-        echo "linker = '${WRAPPER_DIR}/linker-native-wrapper.sh'" >> ${CARGO_HOME}/config
+    cat >${CARGO_HOME}/config << EOF
+[host.${RUST_BUILD}]
+linker = ${WRAPPER_DIR}/linker-native-wrapper.sh
+[target.${RUST_TARGET}]
+linker = ${WRAPPER_DIR}/linker-wrapper.sh
 
-        echo >> ${CARGO_HOME}/config
-        echo "[target.${RUST_TARGET}]" >> ${CARGO_HOME}/config
-        echo "linker = '${WRAPPER_DIR}/linker-wrapper.sh'" >> ${CARGO_HOME}/config
-    else
-        echo > ${CARGO_HOME}/config
-        echo "[target.${RUST_TARGET}]" >> ${CARGO_HOME}/config
-        echo "linker = '${WRAPPER_DIR}/linker-wrapper.sh'" >> ${CARGO_HOME}/config
-    fi
-
-    echo >> ${CARGO_HOME}/config
-    echo "[build]" >> ${CARGO_HOME}/config
-    echo "rustflags = ['-C', 'rpath']" >> ${CARGO_HOME}/config
-
-    echo >> ${CARGO_HOME}/config
-    echo "[profile.release]" >> ${CARGO_HOME}/config
-    echo "debug = true" >> ${CARGO_HOME}/config
+[build]
+rustflags = ['-C', 'rpath']
+[profile.release]
+debug = true
+EOF
 }
 
 cargo_do_configure() {
