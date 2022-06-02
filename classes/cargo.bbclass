@@ -32,6 +32,7 @@ CARGO_BUILD_FLAGS = "\
     --verbose \
     --manifest-path ${S}/Cargo.toml \
     --target=${RUST_TARGET} \
+    -Zhost-config -Ztarget-applies-to-host -Zunstable-options \
     ${CARGO_BUILD_TYPE} \
     ${@base_conditional('CARGO_FEATURES', '', '', '--features "${CARGO_FEATURES}"', d)} \
     ${EXTRA_CARGO_FLAGS} \
@@ -39,11 +40,10 @@ CARGO_BUILD_FLAGS = "\
 
 create_cargo_config() {
     cat >${CARGO_HOME}/config << EOF
-[target.${RUST_BUILD}]
-linker = "${WRAPPER_DIR}/linker-native-wrapper.sh"
-
+[host.${RUST_BUILD}]
+linker = ${WRAPPER_DIR}/linker-native-wrapper.sh
 [target.${RUST_TARGET}]
-linker = "${WRAPPER_DIR}/linker-wrapper.sh"
+linker = ${WRAPPER_DIR}/linker-wrapper.sh
 
 [build]
 rustflags = ["-C", "rpath"]
