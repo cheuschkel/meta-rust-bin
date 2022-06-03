@@ -14,6 +14,9 @@ if [ -z "$TARGET_VERSION" ]; then
     exit 1
 fi
 
+# if NIGHTLY_DATE is empty, it should download latest nightly version
+NIGHTLY_DATE="$2"
+
 CHANNEL_FILE="channel-rust-$TARGET_VERSION.toml"
 
 TMPDIR=`mktemp -p "$PWD" -d`
@@ -315,8 +318,13 @@ download_files
 # validate extracted cargo license
 check_cargo_license
 
-RUST_BIN_RECIPE="$ROOT_DIR/recipes-devtools/rust/rust-bin-cross_$TARGET_VERSION.bb"
-CARGO_BIN_RECIPE="$ROOT_DIR/recipes-devtools/rust/cargo-bin-cross_$TARGET_VERSION.bb"
+if [ x"$TARGET_VERSION" == x"nightly" -a "$NIGHTLY_DATE" ]; then
+    RUST_BIN_RECIPE="$ROOT_DIR/recipes-devtools/rust/rust-bin-cross_${TARGET_VERSION}-${NIGHTLY_DATE}.bb"
+    CARGO_BIN_RECIPE="$ROOT_DIR/recipes-devtools/rust/cargo-bin-cross_${TARGET_VERSION}-${NIGHTLY_DATE}.bb"
+else
+    RUST_BIN_RECIPE="$ROOT_DIR/recipes-devtools/rust/rust-bin-cross_$TARGET_VERSION.bb"
+    CARGO_BIN_RECIPE="$ROOT_DIR/recipes-devtools/rust/cargo-bin-cross_$TARGET_VERSION.bb"
+fi
 
 # create/clear files
 echo "" >"$RUST_BIN_RECIPE"
